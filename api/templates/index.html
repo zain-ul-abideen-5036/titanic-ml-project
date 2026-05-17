@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Titanic Survival Predictor</title>
+<style>
+  /* ── Reset & base ─────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:    #0a1628;
+    --navy2:   #0f2044;
+    --blue:    #1a3a6b;
+    --accent:  #2e7cf6;
+    --accent2: #5b9cf6;
+    --gold:    #f5c842;
+    --green:   #22c55e;
+    --red:     #ef4444;
+    --white:   #ffffff;
+    --gray:    #94a3b8;
+    --light:   #e2e8f0;
+    --card:    rgba(255,255,255,0.05);
+    --border:  rgba(255,255,255,0.10);
+    --radius:  14px;
+    --shadow:  0 8px 32px rgba(0,0,0,0.4);
+  }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--navy);
+    color: var(--white);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Ocean background animation ──────────────────────────────── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse 120% 60% at 50% 100%, #0d3166 0%, transparent 60%),
+      radial-gradient(ellipse 80% 40% at 20% 80%,  #0a2448 0%, transparent 50%),
+      linear-gradient(180deg, #060d1a 0%, #0a1628 40%, #0d2a50 100%);
+    pointer-events: none;
+  }
+
+  /* Stars */
+  body::after {
+    content: '';
+    position: fixed; inset: 0; z-index: 0;
+    background-image:
+      radial-gradient(1px 1px at 20% 15%, rgba(255,255,255,0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 70% 8%,  rgba(255,255,255,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 45% 22%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 85% 18%, rgba(255,255,255,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 10% 30%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 60% 5%,  rgba(255,255,255,0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 30% 10%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 90% 30%, rgba(255,255,255,0.3) 0%, transparent 100%);
+    pointer-events: none;
+  }
+
+  /* ── Layout ───────────────────────────────────────────────────── */
+  .page { position: relative; z-index: 1; max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+  /* ── Header ───────────────────────────────────────────────────── */
+  header {
+    text-align: center;
+    padding: 2.5rem 0 2rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 2.5rem;
+  }
+  .ship-icon { font-size: 3.5rem; margin-bottom: 0.5rem; display: block; filter: drop-shadow(0 4px 16px rgba(46,124,246,0.5)); }
+  header h1 {
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #ffffff 0%, #a8c8ff 50%, var(--gold) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+  }
+  header p { color: var(--gray); font-size: 0.95rem; }
+  .badges { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin-top: 1rem; }
+  .badge {
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;
+    padding: 0.25rem 0.75rem; border-radius: 99px;
+    border: 1px solid var(--border); color: var(--gray);
+    background: var(--card);
+  }
+
+  /* ── Two-column layout ────────────────────────────────────────── */
+  .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  @media(max-width: 680px) { .main-grid { grid-template-columns: 1fr; } }
+
+  /* ── Card ─────────────────────────────────────────────────────── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    backdrop-filter: blur(12px);
+  }
+  .card-title {
+    font-size: 0.8rem; font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase; color: var(--accent2);
+    margin-bottom: 1.2rem; display: flex; align-items: center; gap: 0.5rem;
+  }
+
+  /* ── Form fields ──────────────────────────────────────────────── */
+  .field { margin-bottom: 1rem; }
+  .field label {
+    display: block; font-size: 0.8rem; font-weight: 600;
+    color: var(--light); margin-bottom: 0.4rem;
+  }
+  .field .hint { font-size: 0.72rem; color: var(--gray); margin-top: 0.2rem; }
+
+  select, input[type="number"] {
+    width: 100%; padding: 0.6rem 0.85rem;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid var(--border);
+    border-radius: 8px; color: var(--white);
+    font-size: 0.9rem; font-family: inherit;
+    transition: border-color 0.2s, background 0.2s;
+    appearance: none; -webkit-appearance: none;
+    outline: none;
+  }
+  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.8rem center; padding-right: 2rem; }
+  select option { background: #0f2044; color: var(--white); }
+  select:focus, input[type="number"]:focus {
+    border-color: var(--accent);
+    background: rgba(46,124,246,0.1);
+  }
+
+  /* ── Predict button ───────────────────────────────────────────── */
+  .btn-predict {
+    width: 100%; padding: 0.85rem;
+    background: linear-gradient(135deg, var(--accent), #1456c8);
+    border: none; border-radius: 10px; color: white;
+    font-size: 1rem; font-weight: 700; letter-spacing: 0.3px;
+    cursor: pointer; margin-top: 0.5rem;
+    transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+    box-shadow: 0 4px 20px rgba(46,124,246,0.4);
+    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+  }
+  .btn-predict:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(46,124,246,0.5); }
+  .btn-predict:active { transform: translateY(0); }
+  .btn-predict:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  /* ── Result panel ─────────────────────────────────────────────── */
+  .result-panel {
+    margin-top: 1.5rem;
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    border: 1px solid transparent;
+    display: none;
+    animation: fadeIn 0.4s ease;
+  }
+  @keyframes fadeIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform:none; } }
+
+  .result-panel.survived {
+    background: linear-gradient(135deg, rgba(34,197,94,0.12), rgba(34,197,94,0.04));
+    border-color: rgba(34,197,94,0.35);
+  }
+  .result-panel.died {
+    background: linear-gradient(135deg, rgba(239,68,68,0.12), rgba(239,68,68,0.04));
+    border-color: rgba(239,68,68,0.35);
+  }
+
+  .result-icon { font-size: 3rem; text-align: center; margin-bottom: 0.5rem; }
+  .result-verdict {
+    font-size: 1.4rem; font-weight: 800; text-align: center;
+    margin-bottom: 0.25rem;
+  }
+  .result-verdict.survived { color: var(--green); }
+  .result-verdict.died     { color: var(--red); }
+
+  .result-msg { text-align: center; color: var(--gray); font-size: 0.88rem; margin-bottom: 1.2rem; }
+
+  /* ── Probability bar ──────────────────────────────────────────── */
+  .prob-section { margin-bottom: 1.2rem; }
+  .prob-label { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--gray); margin-bottom: 0.4rem; }
+  .prob-label strong { color: var(--white); font-size: 1rem; }
+  .prob-track {
+    height: 10px; background: rgba(255,255,255,0.08);
+    border-radius: 99px; overflow: hidden;
+  }
+  .prob-fill {
+    height: 100%; border-radius: 99px;
+    transition: width 0.8s cubic-bezier(0.34,1.56,0.64,1);
+    width: 0%;
+  }
+  .prob-fill.survived { background: linear-gradient(90deg, #16a34a, #22c55e); }
+  .prob-fill.died     { background: linear-gradient(90deg, #b91c1c, #ef4444); }
+
+  /* ── Confidence badge ─────────────────────────────────────────── */
+  .confidence-row { text-align: center; }
+  .conf-badge {
+    display: inline-block; font-size: 0.75rem; font-weight: 700;
+    letter-spacing: 0.5px; text-transform: uppercase;
+    padding: 0.3rem 1rem; border-radius: 99px;
+  }
+  .conf-high   { background: rgba(34,197,94,0.15);  color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+  .conf-medium { background: rgba(245,200,66,0.15); color: #fbbf24; border: 1px solid rgba(245,200,66,0.3); }
+  .conf-low    { background: rgba(239,68,68,0.1);   color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
+
+  /* ── Stats strip ──────────────────────────────────────────────── */
+  .stats-strip {
+    display: grid; grid-template-columns: repeat(3,1fr);
+    gap: 0.75rem; margin-top: 1rem;
+  }
+  .stat-box {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 0.75rem; text-align: center;
+  }
+  .stat-val { font-size: 1.15rem; font-weight: 800; color: var(--accent2); }
+  .stat-lbl { font-size: 0.7rem; color: var(--gray); margin-top: 0.2rem; }
+
+  /* ── Info card (right column top) ────────────────────────────── */
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-bottom: 1rem; }
+  .info-item {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 0.6rem 0.8rem;
+  }
+  .info-item .il { font-size: 0.7rem; color: var(--gray); margin-bottom: 0.2rem; }
+  .info-item .iv { font-size: 0.85rem; font-weight: 600; color: var(--light); }
+
+  /* ── Historical fact box ──────────────────────────────────────── */
+  .fact-box {
+    background: rgba(245,200,66,0.07);
+    border: 1px solid rgba(245,200,66,0.2);
+    border-radius: 10px; padding: 1rem;
+    font-size: 0.82rem; color: #fde68a; line-height: 1.6;
+  }
+  .fact-box strong { color: var(--gold); display: block; margin-bottom: 0.25rem; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* ── Survival stats card ──────────────────────────────────────── */
+  .survival-bars { display: flex; flex-direction: column; gap: 0.6rem; }
+  .sbar-row { display: flex; align-items: center; gap: 0.7rem; font-size: 0.8rem; }
+  .sbar-label { width: 110px; color: var(--gray); flex-shrink: 0; }
+  .sbar-track { flex: 1; height: 8px; background: rgba(255,255,255,0.08); border-radius: 99px; overflow: hidden; }
+  .sbar-fill  { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+  .sbar-pct   { width: 36px; text-align: right; color: var(--accent2); font-weight: 700; }
+
+  /* ── Loading spinner ──────────────────────────────────────────── */
+  .spinner {
+    width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white; border-radius: 50%;
+    animation: spin 0.7s linear infinite; display: none;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Error toast ──────────────────────────────────────────────── */
+  .error-toast {
+    background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3);
+    border-radius: 8px; padding: 0.75rem 1rem; margin-top: 0.75rem;
+    font-size: 0.85rem; color: #fca5a5; display: none;
+  }
+
+  /* ── Footer ───────────────────────────────────────────────────── */
+  footer {
+    text-align: center; margin-top: 3rem;
+    padding-top: 1.5rem; border-top: 1px solid var(--border);
+    font-size: 0.78rem; color: var(--gray);
+  }
+  footer a { color: var(--accent2); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <header>
+    <span class="ship-icon">🚢</span>
+    <h1>Titanic Survival Predictor</h1>
+    <p>Enter passenger details to predict survival probability using a trained ML model</p>
+    <div class="badges">
+      <span class="badge">RandomForest</span>
+      <span class="badge">83% Accuracy</span>
+      <span class="badge">FastAPI</span>
+      <span class="badge">End-to-End ML</span>
+    </div>
+  </header>
+
+  <!-- Main grid -->
+  <div class="main-grid">
+
+    <!-- LEFT: Form -->
+    <div>
+      <div class="card">
+        <div class="card-title"> Passenger Details</div>
+
+        <div class="field">
+          <label>Ticket Class</label>
+          <select id="pclass">
+            <option value="1">1st Class — Upper deck, luxury cabins</option>
+            <option value="2">2nd Class — Middle deck, comfortable</option>
+            <option value="3" selected>3rd Class — Lower deck, steerage</option>
+          </select>
+          <div class="hint">Higher class = closer to lifeboats</div>
+        </div>
+
+        <div class="field">
+          <label>Sex</label>
+          <select id="sex">
+            <option value="female">Female</option>
+            <option value="male" selected>Male</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Age (years)</label>
+          <input type="number" id="age" value="28" min="0" max="120" step="1">
+          <div class="hint">Average Titanic passenger was 29 years old</div>
+        </div>
+
+        <div class="field">
+          <label>Siblings / Spouses Aboard</label>
+          <input type="number" id="sibsp" value="0" min="0" max="10">
+          <div class="hint">Brothers, sisters, husband, wife on board</div>
+        </div>
+
+        <div class="field">
+          <label>Parents / Children Aboard</label>
+          <input type="number" id="parch" value="0" min="0" max="10">
+          <div class="hint">Mother, father, sons, daughters on board</div>
+        </div>
+
+        <div class="field">
+          <label>Ticket Fare (£)</label>
+          <input type="number" id="fare" value="8.05" min="0" step="0.01">
+          <div class="hint">3rd class ~£8 · 2nd ~£15 · 1st ~£80+</div>
+        </div>
+
+        <div class="field">
+          <label>Port of Embarkation</label>
+          <select id="embarked">
+            <option value="S" selected>Southampton, England (S)</option>
+            <option value="C">Cherbourg, France (C)</option>
+            <option value="Q">Queenstown, Ireland (Q)</option>
+          </select>
+        </div>
+
+        <button class="btn-predict" id="predictBtn" onclick="predict()">
+          <div class="spinner" id="spinner"></div>
+          <span id="btnText">⚓ Predict Survival</span>
+        </button>
+        <div class="error-toast" id="errorBox"></div>
+      </div>
+
+      <!-- Result panel -->
+      <div class="result-panel" id="resultPanel">
+        <div class="result-icon" id="resultIcon"></div>
+        <div class="result-verdict" id="resultVerdict"></div>
+        <div class="result-msg"   id="resultMsg"></div>
+
+        <div class="prob-section">
+          <div class="prob-label">
+            <span>Survival Probability</span>
+            <strong id="probPct">—</strong>
+          </div>
+          <div class="prob-track">
+            <div class="prob-fill" id="probFill"></div>
+          </div>
+        </div>
+
+        <div class="confidence-row">
+          <span class="conf-badge" id="confBadge"></span>
+        </div>
+
+        <div class="stats-strip" id="statsStrip"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Info panels -->
+    <div style="display:flex;flex-direction:column;gap:1.2rem;">
+
+      <!-- API status -->
+      <div class="card">
+        <div class="card-title"> API Status</div>
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="il">Status</div>
+            <div class="iv" id="apiStatus">Checking…</div>
+          </div>
+          <div class="info-item">
+            <div class="il">Model</div>
+            <div class="iv" id="modelStatus">—</div>
+          </div>
+          <div class="info-item">
+            <div class="il">Total Predictions</div>
+            <div class="iv" id="totalPreds">—</div>
+          </div>
+          <div class="info-item">
+            <div class="il">Survival Rate</div>
+            <div class="iv" id="survivalRate">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Historical survival rates -->
+      <div class="card">
+        <div class="card-title"> Historical Survival Rates</div>
+        <div class="survival-bars">
+          <div class="sbar-row"><span class="sbar-label">1st Class</span><div class="sbar-track"><div class="sbar-fill" style="width:63%"></div></div><span class="sbar-pct">63%</span></div>
+          <div class="sbar-row"><span class="sbar-label">2nd Class</span><div class="sbar-track"><div class="sbar-fill" style="width:47%"></div></div><span class="sbar-pct">47%</span></div>
+          <div class="sbar-row"><span class="sbar-label">3rd Class</span><div class="sbar-track"><div class="sbar-fill" style="width:24%"></div></div><span class="sbar-pct">24%</span></div>
+          <div class="sbar-row"><span class="sbar-label">Women</span><div class="sbar-track"><div class="sbar-fill" style="width:74%"></div></div><span class="sbar-pct">74%</span></div>
+          <div class="sbar-row"><span class="sbar-label">Men</span><div class="sbar-track"><div class="sbar-fill" style="width:19%"></div></div><span class="sbar-pct">19%</span></div>
+          <div class="sbar-row"><span class="sbar-label">Children</span><div class="sbar-track"><div class="sbar-fill" style="width:54%"></div></div><span class="sbar-pct">54%</span></div>
+          <div class="sbar-row"><span class="sbar-label">Overall</span><div class="sbar-track"><div class="sbar-fill" style="width:38%"></div></div><span class="sbar-pct">38%</span></div>
+        </div>
+      </div>
+
+      <!-- Historical fact -->
+      <div class="card">
+        <div class="card-title"> About the Dataset</div>
+        <div class="fact-box">
+          <strong> RMS Titanic — April 15, 1912</strong>
+          Of 2,224 passengers and crew, only 710 survived (32%). The ship carried lifeboats for only 1,178 people. The rule of "women and children first" was strictly enforced on the Titanic, which heavily influenced survival outcomes across passenger classes.
+        </div>
+        <div style="margin-top:0.75rem;font-size:0.8rem;color:var(--gray);line-height:1.6;">
+          This model was trained on 891 passenger records from the Kaggle Titanic dataset using RandomForestClassifier with GridSearchCV hyperparameter tuning.
+        </div>
+      </div>
+
+      <!-- Quick examples -->
+      <div class="card">
+        <div class="card-title"> Try These Examples</div>
+        <div style="display:flex;flex-direction:column;gap:0.5rem;">
+          <button class="example-btn" onclick="fillExample(1,'female',29,0,0,100,'S')">👩 1st class woman, age 29</button>
+          <button class="example-btn" onclick="fillExample(3,'male',22,0,0,8,'S')">👨 3rd class man, age 22</button>
+          <button class="example-btn" onclick="fillExample(1,'male',45,1,0,80,'C')">👴 1st class man with wife, age 45</button>
+          <button class="example-btn" onclick="fillExample(2,'female',8,1,1,30,'S')">👧 2nd class girl, age 8 with parents</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    Built with <a href="https://fastapi.tiangolo.com">FastAPI</a> · 
+    <a href="https://scikit-learn.org">Scikit-learn</a> · 
+    Docker · Deployed on Render / Azure
+    <br>End-to-end ML portfolio project
+  </footer>
+</div>
+
+<style>
+.example-btn {
+  width: 100%; padding: 0.55rem 0.9rem; text-align: left;
+  background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--light); font-size: 0.82rem; cursor: pointer;
+  transition: background 0.15s, border-color 0.15s; font-family: inherit;
+}
+.example-btn:hover { background: rgba(46,124,246,0.12); border-color: rgba(46,124,246,0.4); }
+</style>
+
+<script>
+// ── Fill example values ─────────────────────────────────────────────────────
+function fillExample(pclass, sex, age, sibsp, parch, fare, embarked) {
+  document.getElementById('pclass').value   = pclass;
+  document.getElementById('sex').value      = sex;
+  document.getElementById('age').value      = age;
+  document.getElementById('sibsp').value    = sibsp;
+  document.getElementById('parch').value    = parch;
+  document.getElementById('fare').value     = fare;
+  document.getElementById('embarked').value = embarked;
+}
+
+// ── API health check ────────────────────────────────────────────────────────
+async function checkHealth() {
+  try {
+    const r = await fetch('/health');
+    const d = await r.json();
+    document.getElementById('apiStatus').textContent    = d.status === 'healthy' ? '✅ Online' : '⚠️ ' + d.status;
+    document.getElementById('modelStatus').textContent  = d.model === 'loaded'   ? '✅ Loaded' : '❌ Missing';
+  } catch {
+    document.getElementById('apiStatus').textContent   = '❌ Offline';
+    document.getElementById('modelStatus').textContent = '—';
+  }
+}
+
+async function checkMetrics() {
+  try {
+    const r = await fetch('/metrics');
+    const d = await r.json();
+    document.getElementById('totalPreds').textContent  = d.total_predictions ?? '0';
+    document.getElementById('survivalRate').textContent = d.survival_rate != null
+      ? (d.survival_rate * 100).toFixed(1) + '%' : '—';
+  } catch { /* silent */ }
+}
+
+// ── Predict ──────────────────────────────────────────────────────────────────
+async function predict() {
+  const btn     = document.getElementById('predictBtn');
+  const spinner = document.getElementById('spinner');
+  const btnText = document.getElementById('btnText');
+  const errBox  = document.getElementById('errorBox');
+  const panel   = document.getElementById('resultPanel');
+
+  // gather inputs
+  const payload = {
+    pclass  : parseInt(document.getElementById('pclass').value),
+    sex     : document.getElementById('sex').value,
+    age     : parseFloat(document.getElementById('age').value),
+    sibsp   : parseInt(document.getElementById('sibsp').value),
+    parch   : parseInt(document.getElementById('parch').value),
+    fare    : parseFloat(document.getElementById('fare').value),
+    embarked: document.getElementById('embarked').value,
+  };
+
+  // validate
+  if (isNaN(payload.age) || payload.age < 0) {
+    showError('Please enter a valid age (0–120).'); return;
+  }
+  if (isNaN(payload.fare) || payload.fare < 0) {
+    showError('Please enter a valid fare (≥ 0).'); return;
+  }
+
+  // loading state
+  btn.disabled = true;
+  spinner.style.display = 'block';
+  btnText.textContent = 'Predicting…';
+  errBox.style.display = 'none';
+  panel.style.display  = 'none';
+
+  try {
+    const res  = await fetch('/predict', {
+      method : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body   : JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || `HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    showResult(data, payload);
+    checkMetrics();
+  } catch (e) {
+    showError('Prediction failed: ' + e.message +
+      '. Make sure the model is trained (run python src/train.py).');
+  } finally {
+    btn.disabled = false;
+    spinner.style.display = 'none';
+    btnText.textContent = '⚓ Predict Survival';
+  }
+}
+
+function showError(msg) {
+  const errBox = document.getElementById('errorBox');
+  errBox.textContent = '⚠️ ' + msg;
+  errBox.style.display = 'block';
+}
+
+function showResult(data, payload) {
+  const panel   = document.getElementById('resultPanel');
+  const survived = data.survived;
+  const pct      = Math.round(data.probability * 100);
+
+  // panel class
+  panel.className = 'result-panel ' + (survived ? 'survived' : 'died');
+
+  document.getElementById('resultIcon').textContent    = survived ? '🛟' : '🌊';
+  document.getElementById('resultVerdict').textContent = survived ? 'SURVIVED' : 'DID NOT SURVIVE';
+  document.getElementById('resultVerdict').className   = 'result-verdict ' + (survived ? 'survived' : 'died');
+  document.getElementById('resultMsg').textContent     = survived
+    ? `This passenger would likely have made it onto a lifeboat.`
+    : `This passenger would likely not have survived.`;
+
+  // probability bar
+  document.getElementById('probPct').textContent = pct + '%';
+  const fill = document.getElementById('probFill');
+  fill.className = 'prob-fill ' + (survived ? 'survived' : 'died');
+  setTimeout(() => { fill.style.width = pct + '%'; }, 50);
+
+  // confidence badge
+  const conf = document.getElementById('confBadge');
+  const labels = { high: '🎯 High Confidence', medium: '📊 Medium Confidence', low: '🎲 Low Confidence' };
+  conf.textContent = labels[data.confidence] || data.confidence;
+  conf.className   = 'conf-badge conf-' + data.confidence;
+
+  // stats strip
+  const famSize = payload.sibsp + payload.parch + 1;
+  const classLabel = ['', '1st','2nd','3rd'][payload.pclass];
+  document.getElementById('statsStrip').innerHTML = `
+    <div class="stat-box">
+      <div class="stat-val">${pct}%</div>
+      <div class="stat-lbl">Survival Prob.</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-val">${classLabel}</div>
+      <div class="stat-lbl">Class</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-val">${famSize}</div>
+      <div class="stat-lbl">Family Size</div>
+    </div>
+  `;
+
+  panel.style.display = 'block';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+checkHealth();
+checkMetrics();
+setInterval(checkMetrics, 30000);
+</script>
+</body>
+</html>

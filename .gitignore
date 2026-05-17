@@ -1,0 +1,11 @@
+venv/
+__pycache__/
+*.pyc
+.env
+artifacts/
+*.pkl
+*.log
+.DS_Store
+data/titanic.zip
+.pytest_cache/
+.ipynb_checkpoints/
