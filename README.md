@@ -1,4 +1,4 @@
-# Titanic Survival Predictor v2
+# Titanic Survival Predictor
 
 End-to-end ML pipeline with a beautiful web dashboard.
 
