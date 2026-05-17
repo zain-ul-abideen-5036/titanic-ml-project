@@ -9,3 +9,6 @@ artifacts/
 data/titanic.zip
 .pytest_cache/
 .ipynb_checkpoints/
+artifacts/*
+!artifacts/model.pkl
+!artifacts/scaler.pkl
