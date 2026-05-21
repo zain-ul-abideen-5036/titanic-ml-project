@@ -221,7 +221,7 @@ docker run -d -p 8000:8000 --name titanic titanic-predictor
 
 This project is deployed on **Microsoft Azure Container Apps** using a Docker image pushed to Docker Hub.
 
-> **Live URL:** `[https://YOUR_AZURE_URL.azurecontainerapps.io](https://titanic-predictor.victoriousstone-29508626.centralindia.azurecontainerapps.io)`
+> **Live URL:** `https://titanic-predictor.victoriousstone-29508626.centralindia.azurecontainerapps.io`
 >
 > **Note:** If the link is unresponsive, the service may be paused due to Azure student credit limits. The full source code and all instructions to run the project locally are available in this repository.
 
