@@ -93,7 +93,7 @@ titanic-ml-project/
 **1. Clone and create environment**
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/titanic-ml-project.git
+git clone https://github.com/zain-ul-abideen-5036/titanic-ml-project.git
 cd titanic-ml-project
 
 python -m venv venv
