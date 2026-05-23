@@ -4,6 +4,20 @@
 
 <br/>
 
+<p align="center">
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" width="90" height="90"/>
+</p>
+<h3 align="center">From Raw Data to a Live, Deployed Machine Learning API</h3>
+ 
+<p align="center">
+  A production-grade ML pipeline covering data engineering, model training, REST API development,<br/>
+  Docker containerization, CI/CD automation, and live deployment on Microsoft Azure Container Apps.
+</p>
+
+| Accuracy | F1 Score | ROC-AUC | Training Samples | Engineered Features |
+|:---:|:---:|:---:|:---:|:---:|
+| **83.2%** | **80.7%** | **88.4%** | **891** | **11** |
+
 <img src="https://img.shields.io/badge/Python-3.11-3776AB?style=for-the-badge&logo=python&logoColor=white"/>
 <img src="https://img.shields.io/badge/FastAPI-0.110-009688?style=for-the-badge&logo=fastapi&logoColor=white"/>
 <img src="https://img.shields.io/badge/scikit--learn-1.4.1-F7931E?style=for-the-badge&logo=scikitlearn&logoColor=white"/>
@@ -12,12 +26,6 @@
 <img src="https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white"/>
 
 <br/><br/>
-
-| Accuracy | F1 Score | ROC-AUC | Training Samples | Engineered Features |
-|:---:|:---:|:---:|:---:|:---:|
-| **83.2%** | **80.7%** | **88.4%** | **891** | **11** |
-
-<br/>
 
 </div>
 
@@ -30,8 +38,9 @@ The objective was not simply to train a model, but to build and ship it the way 
 ---
 
 ## Architecture
-
-<img width="500" height="800" alt="image" src="https://github.com/user-attachments/assets/709e71b1-19ec-4a43-84f6-0ddddb5b675e" />
+<p align="center">
+  <img width="400" height="500" alt="image" src="https://github.com/user-attachments/assets/709e71b1-19ec-4a43-84f6-0ddddb5b675e" />
+</p>
 
 ---
 
