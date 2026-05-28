@@ -242,7 +242,7 @@ Test coverage includes preprocessing transformations, feature construction, miss
 
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:2563eb,50:1b3a6b,100:0d1b2a&height=120&section=footer" width="100%"/>
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:2563eb,50:1b3a6b,100:0d1b2a&height=180&section=footer" width="100%"/>
 
 </div>
 
